@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+# Google service account credentials — never commit
+credentials.json
+*.json.key
+service_account*.json
+
 # Python
 __pycache__/
 *.py[cod]

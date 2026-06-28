@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "google-sheets": {
+      "command": "python",
+      "args": ["/Users/rajpandian/Desktop/Workspace/Claude_Learning/google-sheets-mcp/server.py"],
+      "env": {
+        "GOOGLE_SERVICE_ACCOUNT_FILE": "/path/to/your/credentials.json"
+      }
+    }
+  }
+}
