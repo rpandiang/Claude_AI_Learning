@@ -15,7 +15,7 @@ from mcp.types import Tool, TextContent
 
 from sheets_client import SheetsClient
 
-server = Server("google-sheets-mcp")
+server = Server("Cognizant AI score MCP Server")
 _sheets: SheetsClient | None = None
 
 
