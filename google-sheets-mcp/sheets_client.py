@@ -119,6 +119,41 @@ class SheetsClient:
         }
 
     # ------------------------------------------------------------------
+    # Find associate by name
+    # ------------------------------------------------------------------
+
+    def find_associate(
+        self,
+        spreadsheet_id: str,
+        sheet_name: str,
+        associate_name: str,
+        name_column: int = 0,
+    ) -> dict[str, Any]:
+        range_ = f"{sheet_name}!A:Z"
+        result = (
+            self._sheets.values()
+            .get(spreadsheetId=spreadsheet_id, range=range_)
+            .execute()
+        )
+        rows = result.get("values", [])
+        if not rows:
+            return {"found": False, "message": f'The associate name "{associate_name}" is not in the list.'}
+
+        headers = rows[0] if rows else []
+        name_lower = associate_name.strip().lower()
+
+        matches = []
+        for row in rows[1:]:
+            if name_column < len(row) and row[name_column].strip().lower() == name_lower:
+                record = {headers[i]: row[i] if i < len(row) else "" for i in range(len(headers))}
+                matches.append(record)
+
+        if not matches:
+            return {"found": False, "message": f'The associate name "{associate_name}" is not in the list.'}
+
+        return {"found": True, "count": len(matches), "results": matches}
+
+    # ------------------------------------------------------------------
     # Clear
     # ------------------------------------------------------------------
 

@@ -131,6 +131,34 @@ async def list_tools() -> list[Tool]:
                 "required": ["spreadsheet_id", "range"],
             },
         ),
+        Tool(
+            name="find_associate",
+            description=(
+                "Search for an associate by name in a Google Sheet. "
+                "Returns their full row data if found, or a clear message if the name is not in the list. "
+                "Assumes the first row is a header row and matches names case-insensitively."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "spreadsheet_id": {"type": "string"},
+                    "sheet_name": {
+                        "type": "string",
+                        "description": "Name of the sheet tab, e.g. 'Sheet1'.",
+                    },
+                    "associate_name": {
+                        "type": "string",
+                        "description": "Full name of the associate to search for.",
+                    },
+                    "name_column": {
+                        "type": "integer",
+                        "description": "Zero-based column index where names are stored (default: 0 = column A).",
+                        "default": 0,
+                    },
+                },
+                "required": ["spreadsheet_id", "sheet_name", "associate_name"],
+            },
+        ),
     ]
 
 
@@ -156,6 +184,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             )
         elif name == "clear_range":
             result = sheets.clear(arguments["spreadsheet_id"], arguments["range"])
+        elif name == "find_associate":
+            result = sheets.find_associate(
+                arguments["spreadsheet_id"],
+                arguments["sheet_name"],
+                arguments["associate_name"],
+                arguments.get("name_column", 0),
+            )
         else:
             result = {"error": f"Unknown tool: {name}"}
     except Exception as exc:
