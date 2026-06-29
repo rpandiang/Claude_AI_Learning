@@ -32,6 +32,9 @@ yarn-error.log*
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local session data
+.claude/
 *.swp
 *.swo
 
