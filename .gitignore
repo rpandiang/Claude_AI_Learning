@@ -41,6 +41,10 @@ yarn-error.log*
 # Jupyter
 .ipynb_checkpoints/
 
+# Coverage
+.coverage
+htmlcov/
+
 # Logs
 *.log
 logs/
