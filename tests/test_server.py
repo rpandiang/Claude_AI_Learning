@@ -25,6 +25,48 @@ def reset_server_state():
     server._sheets = original
 
 
+class TestGetSheetsClient:
+    def test_uses_env_var_when_set(self, monkeypatch):
+        import server
+        monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_FILE", "/custom/creds.json")
+
+        with patch("server.SheetsClient") as MockSheetsClient:
+            mock_instance = MagicMock()
+            MockSheetsClient.return_value = mock_instance
+
+            result = server.get_sheets_client()
+
+        MockSheetsClient.assert_called_once_with(credentials_file="/custom/creds.json")
+        assert result is mock_instance
+
+    def test_falls_back_to_default_when_env_var_unset(self, monkeypatch):
+        import server
+        monkeypatch.delenv("GOOGLE_SERVICE_ACCOUNT_FILE", raising=False)
+
+        with patch("server.SheetsClient") as MockSheetsClient:
+            mock_instance = MagicMock()
+            MockSheetsClient.return_value = mock_instance
+
+            result = server.get_sheets_client()
+
+        MockSheetsClient.assert_called_once_with(credentials_file="credentials.json")
+        assert result is mock_instance
+
+    def test_caches_singleton_across_calls(self, monkeypatch):
+        import server
+        monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_FILE", "/custom/creds.json")
+
+        with patch("server.SheetsClient") as MockSheetsClient:
+            mock_instance = MagicMock()
+            MockSheetsClient.return_value = mock_instance
+
+            first = server.get_sheets_client()
+            second = server.get_sheets_client()
+
+        MockSheetsClient.assert_called_once_with(credentials_file="/custom/creds.json")
+        assert first is second is mock_instance
+
+
 class TestListTools:
     @pytest.mark.asyncio
     async def test_all_expected_tools_registered(self):
@@ -33,6 +75,7 @@ class TestListTools:
         names = {t.name for t in tools}
         assert names == {
             "get_sheet_info",
+            "list_sheets",
             "read_sheet",
             "write_sheet",
             "append_rows",
@@ -65,6 +108,22 @@ class TestCallTool:
         mock.get_info.assert_called_once_with(SPREADSHEET_ID)
         data = json.loads(result[0].text)
         assert data["title"] == "Test"
+
+    @pytest.mark.asyncio
+    async def test_list_sheets_dispatches_correctly(self):
+        import server
+        mock = _mock_sheets_client()
+        mock.list_sheets.return_value = {
+            "spreadsheet_id": SPREADSHEET_ID,
+            "sheet_names": ["Sheet1", "Sheet2"],
+        }
+
+        with self._patch_client(mock):
+            result = await server.call_tool("list_sheets", {"spreadsheet_id": SPREADSHEET_ID})
+
+        mock.list_sheets.assert_called_once_with(SPREADSHEET_ID)
+        data = json.loads(result[0].text)
+        assert data["sheet_names"] == ["Sheet1", "Sheet2"]
 
     @pytest.mark.asyncio
     async def test_read_sheet_dispatches_correctly(self):
@@ -160,6 +219,18 @@ class TestCallTool:
 
         with self._patch_client(mock):
             result = await server.call_tool("get_sheet_info", {"spreadsheet_id": SPREADSHEET_ID})
+
+        data = json.loads(result[0].text)
+        assert data["error"] == "API failure"
+
+    @pytest.mark.asyncio
+    async def test_list_sheets_exception_returns_error(self):
+        import server
+        mock = _mock_sheets_client()
+        mock.list_sheets.side_effect = Exception("API failure")
+
+        with self._patch_client(mock):
+            result = await server.call_tool("list_sheets", {"spreadsheet_id": SPREADSHEET_ID})
 
         data = json.loads(result[0].text)
         assert data["error"] == "API failure"

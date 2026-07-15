@@ -48,6 +48,24 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="list_sheets",
+            description=(
+                "Get just the list of sheet/tab names in a Google Spreadsheet. "
+                "A lighter-weight alternative to get_sheet_info when you don't need "
+                "row/column dimensions."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "spreadsheet_id": {
+                        "type": "string",
+                        "description": "The spreadsheet ID from its URL (/d/<ID>/edit).",
+                    }
+                },
+                "required": ["spreadsheet_id"],
+            },
+        ),
+        Tool(
             name="read_sheet",
             description=(
                 "Read cell values from a Google Sheet range. "
@@ -168,6 +186,8 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         sheets = get_sheets_client()
         if name == "get_sheet_info":
             result = sheets.get_info(arguments["spreadsheet_id"])
+        elif name == "list_sheets":
+            result = sheets.list_sheets(arguments["spreadsheet_id"])
         elif name == "read_sheet":
             result = sheets.read(arguments["spreadsheet_id"], arguments["range"])
         elif name == "write_sheet":

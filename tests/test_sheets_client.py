@@ -57,6 +57,48 @@ class TestGetInfo:
         assert result["sheets"] == []
 
 
+class TestListSheets:
+    def test_returns_sheet_names_only(self):
+        client = _make_client()
+        client._sheets.get.return_value.execute.return_value = {
+            "properties": {"title": "My Sheet"},
+            "sheets": [
+                {
+                    "properties": {
+                        "title": "Sheet1",
+                        "sheetId": 0,
+                        "gridProperties": {"rowCount": 1000, "columnCount": 26},
+                    }
+                },
+                {
+                    "properties": {
+                        "title": "Sheet2",
+                        "sheetId": 1,
+                        "gridProperties": {"rowCount": 500, "columnCount": 10},
+                    }
+                },
+            ],
+        }
+
+        result = client.list_sheets(SPREADSHEET_ID)
+
+        assert result == {
+            "spreadsheet_id": SPREADSHEET_ID,
+            "sheet_names": ["Sheet1", "Sheet2"],
+        }
+
+    def test_empty_sheets_list(self):
+        client = _make_client()
+        client._sheets.get.return_value.execute.return_value = {
+            "properties": {"title": "Empty"},
+            "sheets": [],
+        }
+
+        result = client.list_sheets(SPREADSHEET_ID)
+
+        assert result["sheet_names"] == []
+
+
 class TestRead:
     def test_returns_values_and_row_count(self):
         client = _make_client()

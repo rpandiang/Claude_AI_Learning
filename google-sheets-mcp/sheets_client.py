@@ -42,6 +42,13 @@ class SheetsClient:
             "sheets": sheets_info,
         }
 
+    def list_sheets(self, spreadsheet_id: str) -> dict[str, Any]:
+        info = self.get_info(spreadsheet_id)
+        return {
+            "spreadsheet_id": spreadsheet_id,
+            "sheet_names": [s["title"] for s in info["sheets"]],
+        }
+
     # ------------------------------------------------------------------
     # Read
     # ------------------------------------------------------------------
