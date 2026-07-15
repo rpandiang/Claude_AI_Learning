@@ -56,6 +56,10 @@ open htmlcov/index.html
 
 **Pre-push hook:** `.git/hooks/pre-push` runs the full test suite before every `git push`. The push is blocked if any test fails.
 
+## Security
+
+Before pushing any commit, scan the diff and any new/modified files for API keys, tokens, service account credentials, or other secrets. If a sensitive file type is found that isn't already covered, add a pattern for it to `.gitignore` rather than committing it.
+
 ## Architecture
 
 **Two-file design:**
