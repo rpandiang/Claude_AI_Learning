@@ -1,3 +1,4 @@
 -r google-sheets-mcp/requirements.txt
 pytest>=7.0
 pytest-asyncio>=0.23
+pytest-cov>=4.0
