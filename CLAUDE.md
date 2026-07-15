@@ -58,13 +58,15 @@ open htmlcov/index.html
 
 ## Security
 
-Before pushing any commit, scan the diff and any new/modified files for API keys, tokens, service account credentials, or other secrets. If a sensitive file type is found that isn't already covered, add a pattern for it to `.gitignore` rather than committing it.
+**Pre-commit hook:** `.git/hooks/pre-commit` scans staged changes for likely secrets (AWS keys, PEM private key blocks, Anthropic/OpenAI-style API keys, Google service account JSON, and generic `key = "long-value"` assignments) before every `git commit`. The commit is blocked if anything secret-shaped is found; false positives can be bypassed with `git commit --no-verify`.
+
+Before pushing any commit, also scan the diff and any new/modified files for API keys, tokens, service account credentials, or other secrets the hook might miss. If a sensitive file type is found that isn't already covered, add a pattern for it to `.gitignore` rather than committing it.
 
 ## Architecture
 
 **Two-file design:**
 
-- `server.py` — MCP layer. Defines and registers tools (`get_sheet_info`, `read_sheet`, `write_sheet`, `append_rows`, `clear_range`, `find_associate`), dispatches calls to `SheetsClient`, and serializes results as JSON `TextContent`.
+- `server.py` — MCP layer. Defines and registers tools (`get_sheet_info`, `list_sheets`, `read_sheet`, `write_sheet`, `append_rows`, `clear_range`, `find_associate`), dispatches calls to `SheetsClient`, and serializes results as JSON `TextContent`.
 - `sheets_client.py` — Google Sheets API wrapper. `SheetsClient` authenticates via a service account, wraps the Sheets v4 REST API, and returns plain dicts. All API calls live here; `server.py` contains no API logic.
 
 **Auth:** A single service account credential file is loaded lazily on first tool call (via `get_sheets_client()`). The spreadsheet must be shared with the service account email.
